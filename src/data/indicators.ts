@@ -217,7 +217,7 @@ export const INDICATORS: IndicatorDefinition[] = [
     description: "Copper/Gold Ratio",
     unit: "ratio",
     source: "fred",
-    sourceKey: "PCOPPUSDM/GOLDAMGBD228NLBM",
+    sourceKey: "PCOPPUSDM/GC=F",
     thresholdType: "below",
     warningThreshold: 0.00015,
     dangerThreshold: 0.00012,

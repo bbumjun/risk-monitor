@@ -1,6 +1,7 @@
 import type { IndicatorSnapshot } from "@/types/indicator";
 import { fetchLatestFred, fetchFredSeries } from "@/lib/sources/fred";
 import { fetchFearAndGreed } from "@/lib/sources/cnn";
+import { fetchPrice } from "@/lib/sources/yahoo";
 import { calculateVIX, calculateFearGreed } from "@/lib/indicators/sentiment";
 import { calculateHYOAS, calculateYieldCurve, calculateSTLFSI } from "@/lib/indicators/credit";
 import { calculateDXY, calculateRSI, calculateCopperGoldRatio } from "@/lib/indicators/macro";
@@ -29,7 +30,7 @@ export async function runIngestion(): Promise<IngestionResult> {
 
   const [
     fredVIX, fredHYOAS, fredYieldCurve, fredSTLFSI, fredDXY, fredSPX,
-    fearGreedData, fredCopper, fredGold,
+    fearGreedData, fredCopper, yahooGold,
   ] = await Promise.allSettled([
     fetchLatestFred("VIXCLS"),
     fetchLatestFred("BAMLH0A0HYM2"),
@@ -39,7 +40,7 @@ export async function runIngestion(): Promise<IngestionResult> {
     fetchFredSeries("SP500", { limit: 30 }),
     fetchFearAndGreed(),
     fetchLatestFred("PCOPPUSDM"),
-    fetchLatestFred("GOLDAMGBD228NLBM"),
+    fetchPrice("GC=F"),
   ]);
 
   const resolve = <T>(r: PromiseSettledResult<T>): T | null =>
@@ -53,7 +54,7 @@ export async function runIngestion(): Promise<IngestionResult> {
   const spxSeries = resolve(fredSPX) ?? [];
   const fearGreed = resolve(fearGreedData);
   const copperData = resolve(fredCopper);
-  const goldData = resolve(fredGold);
+  const goldPrice = resolve(yahooGold);
 
   const tryPush = (id: string, errMsg: string, fn: () => IndicatorSnapshot | null) => {
     try {
@@ -75,10 +76,10 @@ export async function runIngestion(): Promise<IngestionResult> {
     const prices = spxSeries.map((o) => ({ close: o.value })).reverse();
     return prices.length >= 15 ? calculateRSI(prices, timestamp) : null;
   });
-  tryPush("copper-gold-ratio", "No Copper or Gold data from FRED", () => {
-    if (!copperData || !goldData) return null;
+  tryPush("copper-gold-ratio", "No Copper (FRED) or Gold (Yahoo) data", () => {
+    if (!copperData || !goldPrice) return null;
     const copperPerLb = copperData.value / 2204.62;
-    return calculateCopperGoldRatio(copperPerLb, goldData.value, timestamp);
+    return calculateCopperGoldRatio(copperPerLb, goldPrice, timestamp);
   });
 
   // Indicators requiring Yahoo (disabled — Yahoo rate limits on serverless)
