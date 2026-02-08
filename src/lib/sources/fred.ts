@@ -9,9 +9,9 @@ export async function fetchFredSeries(
   seriesId: string,
   options?: { limit?: number }
 ): Promise<FredObservation[]> {
-  const apiKey = process.env.FRED_API_KEY;
+  const apiKey = process.env.FRED_API_KEY?.trim();
   if (!apiKey) {
-    console.warn("FRED_API_KEY not found in environment");
+    console.error("[fred] FRED_API_KEY not found in environment");
     return [];
   }
 
@@ -26,7 +26,8 @@ export async function fetchFredSeries(
   try {
     const response = await fetch(url.toString());
     if (!response.ok) {
-      console.warn(`FRED API error for ${seriesId}: ${response.status}`);
+      const body = await response.text().catch(() => "(unreadable)");
+      console.error(`[fred] API error for ${seriesId}: ${response.status} ${response.statusText} — ${body.slice(0, 200)}`);
       return [];
     }
 
@@ -43,7 +44,8 @@ export async function fetchFredSeries(
         value: parseFloat(obs.value),
       }));
   } catch (error) {
-    console.warn(`Failed to fetch FRED series ${seriesId}:`, error);
+    const errMsg = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.error(`[fred] FAILED series ${seriesId}: ${errMsg}`);
     return [];
   }
 }

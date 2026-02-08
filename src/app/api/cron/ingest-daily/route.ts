@@ -69,6 +69,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       success: true,
       timestamp: result.timestamp,
       indicatorsUpdated: result.snapshots.length,
+      indicatorIds: result.snapshots.map((s) => s.indicatorId),
       errors: result.errors,
       compositeScore: result.composite.score,
     }, { status: 200 });
