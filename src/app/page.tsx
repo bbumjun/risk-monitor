@@ -116,7 +116,10 @@ export default function Home() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {dashboardData.categories.map((cat) => {
+              const hasActiveIndicators = cat.indicators.some((ind) => ind.snapshot !== null);
+
               const getRiskColor = () => {
+                if (!hasActiveIndicators) return "bg-zinc-800/50 border-zinc-700/50 text-zinc-500";
                 if (cat.averageRisk < 40) return "bg-green-500/10 border-green-500/20 text-green-500";
                 if (cat.averageRisk < 70) return "bg-yellow-500/10 border-yellow-500/20 text-yellow-500";
                 return "bg-red-500/10 border-red-500/20 text-red-500";
@@ -129,7 +132,7 @@ export default function Home() {
                 >
                   <div className="text-xs font-medium opacity-80">{cat.label}</div>
                   <div className="text-xl font-bold tabular-nums mt-1">
-                    {cat.averageRisk.toFixed(1)}
+                    {hasActiveIndicators ? cat.averageRisk.toFixed(1) : "—"}
                   </div>
                 </div>
               );
@@ -148,7 +151,16 @@ export default function Home() {
             ))}
           </div>
 
-          {historyData.length > 0 && <HistoryChart data={historyData} />}
+          {historyData.length >= 7 ? (
+            <HistoryChart data={historyData} />
+          ) : historyData.length > 0 ? (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center">
+              <h2 className="text-lg font-semibold mb-2">종합 리스크 추이 (1년)</h2>
+              <p className="text-sm text-zinc-500">
+                데이터 수집 중입니다 ({historyData.length}일 / 최소 7일 필요)
+              </p>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

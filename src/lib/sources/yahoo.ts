@@ -71,8 +71,6 @@ interface ChartResponse {
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
-export const yahooLogs: string[] = [];
-
 async function fetchChart(
   symbol: string,
   params: Record<string, string> = {}
@@ -83,7 +81,7 @@ async function fetchChart(
   }
 
   const startMs = Date.now();
-  const log = (msg: string) => { console.log(msg); yahooLogs.push(msg); };
+  const log = (msg: string) => { console.log(msg); };
 
   for (let attempt = 0; attempt < 3; attempt++) {
     const controller = new AbortController();
@@ -273,7 +271,7 @@ export async function fetchSP500BreadthData(
     }
   }
 
-  yahooLogs.push(`[yahoo] Breadth: fetched ${allData.length}/${tickers.length} tickers`);
+  console.log(`[yahoo] Breadth: fetched ${allData.length}/${tickers.length} tickers`);
   return allData;
 }
 
